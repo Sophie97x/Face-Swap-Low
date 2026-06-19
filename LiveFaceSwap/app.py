@@ -515,8 +515,15 @@ class FaceSwapApp(ctk.CTk):
             if src_mask is not None and target_mask is not None:
                 src_img = self.color_correct(src_img, dst_img, src_mask, target_mask)
 
+            aligned_src_img, aligned_source_landmarks = self.align_source_to_target(src_img, self.source_landmarks, target_landmarks, dst_img.shape[:2])
+            if aligned_src_img is not None and aligned_source_landmarks is not None:
+                src_img = aligned_src_img
+                source_landmarks = aligned_source_landmarks
+            else:
+                source_landmarks = self.source_landmarks
+
             for tri in self.delaunay_triangles:
-                t_src = [self.source_landmarks[i] for i in tri]
+                t_src = [source_landmarks[i] for i in tri]
                 t_dst = [target_landmarks[i] for i in tri]
                 if not self.is_valid_triangle(t_src) or not self.is_valid_triangle(t_dst):
                     continue
@@ -643,6 +650,42 @@ class FaceSwapApp(ctk.CTk):
             return blurred
         except Exception:
             return None
+
+    def get_alignment_points(self, landmarks):
+        try:
+            def avg(indices):
+                pts = [landmarks[i] for i in indices]
+                x = sum([p[0] for p in pts]) / len(pts)
+                y = sum([p[1] for p in pts]) / len(pts)
+                return (x, y)
+
+            left_eye = avg([33, 133])
+            right_eye = avg([362, 263])
+            nose = landmarks[1]
+            mouth_left = landmarks[61]
+            mouth_right = landmarks[291]
+            return [left_eye, right_eye, nose, mouth_left, mouth_right]
+        except Exception:
+            return None
+
+    def align_source_to_target(self, src_img, source_landmarks, target_landmarks, target_shape):
+        try:
+            src_points = self.get_alignment_points(source_landmarks)
+            dst_points = self.get_alignment_points(target_landmarks)
+            if src_points is None or dst_points is None:
+                return None, None
+
+            src_arr = np.array(src_points, dtype=np.float32)
+            dst_arr = np.array(dst_points, dtype=np.float32)
+            M, _ = cv2.estimateAffinePartial2D(src_arr, dst_arr, method=cv2.LMEDS)
+            if M is None:
+                return None, None
+
+            warped = cv2.warpAffine(src_img, M, (target_shape[1], target_shape[0]), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
+            transformed_landmarks = [tuple(np.dot(np.append(np.array(p, dtype=np.float32), 1.0), M).tolist()) for p in source_landmarks]
+            return warped, transformed_landmarks
+        except Exception:
+            return None, None
 
     def color_correct(self, src, dst, src_mask, dst_mask):
         try:
