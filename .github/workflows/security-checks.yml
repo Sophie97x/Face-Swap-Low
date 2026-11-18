@@ -20,6 +20,15 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python }}
-      - run: python -m pip install -r LiveFaceSwap/requirements.txt
-      - run: python -m unittest discover -s tests -v
-      - run: python -m compileall -q LiveFaceSwap -x '/.venv/'
+      - name: Verify the launcher rejects Python 3.10
+        if: matrix.python == '3.10'
+        run: |
+          python -m venv LiveFaceSwap/.venv
+          if bash LiveFaceSwap/run.sh > "$RUNNER_TEMP/launcher.log" 2>&1; then exit 1; fi
+          grep -F 'requires Python 3.11' "$RUNNER_TEMP/launcher.log"
+      - if: matrix.python == '3.11'
+        run: python -m pip install -r LiveFaceSwap/requirements.txt
+      - if: matrix.python == '3.11'
+        run: python -m unittest discover -s tests -v
+      - if: matrix.python == '3.11'
+        run: python -m compileall -q LiveFaceSwap -x '/.venv/'
