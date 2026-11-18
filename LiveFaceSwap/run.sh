@@ -20,6 +20,7 @@ if [ ! -x "$VENV_DIR/bin/python" ]; then
 fi
 
 source "$VENV_DIR/bin/activate"
+python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else "Face-Swap-Low requires Python 3.11 or newer. Recreate .venv with Python 3.11.")'
 python -m pip install --upgrade pip
 python -m pip install -r "$APP_DIR/requirements.txt"
 python "$APP_DIR/app.py"

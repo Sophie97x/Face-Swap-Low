@@ -11,7 +11,7 @@ A portable real-time face swap application built with Python, OpenCV, MediaPipe,
 
 ## Requirements
 
-- Python 3.10+ recommended
+- Python 3.11 or newer is required. Python 3.11 is tested in CI. Recreate any existing Python 3.10 virtual environment with Python 3.11 before upgrading.
 - `customtkinter`
 - `opencv-python`
 - `onnxruntime`

@@ -1,5 +1,9 @@
 import ssl
 import sys
+
+if sys.version_info < (3, 11):
+    raise SystemExit("Face-Swap-Low requires Python 3.11 or newer.")
+
 import threading
 import time
 import urllib.request

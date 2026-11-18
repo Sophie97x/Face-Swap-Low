@@ -9,7 +9,7 @@ set "PYTHON_EXEC=python"
 where %PYTHON_EXEC% >nul 2>&1
 if errorlevel 1 (
     set "PYTHON_EXEC=py -3"
-    %PYTHON_EXEC% --version >nul 2>&1
+    !PYTHON_EXEC! --version >nul 2>&1
     if errorlevel 1 (
         echo Python 3 was not found on PATH. Install Python 3 and try again.
         pause
@@ -28,6 +28,8 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
 )
 
 call "%VENV_DIR%\Scripts\activate.bat"
+python -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 'Face-Swap-Low requires Python 3.11 or newer. Recreate .venv with Python 3.11.')"
+if errorlevel 1 exit /b 1
 python -m pip install --upgrade pip
 if errorlevel 1 (
     echo Failed to upgrade pip.
